@@ -1,0 +1,11 @@
+:root {
+  --color-background: #0b0b0c;
+  --color-gold: #d4af37;
+  --color-sapphire: #287bff;
+
+  --color-gold-80: rgb(212 175 55 / 80%);
+  --color-sapphire-20: rgb(40 123 255 / 20%);
+  --color-sapphire-35: rgb(40 123 255 / 35%);
+  --shadow-sapphire: 0 18px 48px rgb(40 123 255 / 18%);
+  --shadow-gold: 0 12px 32px rgb(212 175 55 / 12%);
+}
