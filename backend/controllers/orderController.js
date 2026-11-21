@@ -94,15 +94,17 @@ exports.createOrder = async (req, res, next) => {
       orderType,
       tableNumber: orderType === 'dine-in' ? String(tableNumber).trim() : null,
       specialInstructions: typeof specialInstructions === 'string' ? specialInstructions.trim().slice(0, 1000) : '',
-      paymentMethod: ['cash', 'pay_at_counter', 'not_required'].includes(paymentMethod)
+      paymentMethod: ['cash', 'pay_at_counter', 'not_required', 'razorpay'].includes(paymentMethod)
         ? paymentMethod
         : 'pay_at_counter',
-      paymentStatus: 'pending',
+      paymentStatus: paymentMethod === 'razorpay' ? 'PENDING' : 'not_required',
       orderStatus: 'PLACED',
       estimatedMinutes: 25,
     });
 
-    req.app.get('io')?.to('admins').emit('order:new', publicOrder(order));
+    if (order.paymentMethod !== 'razorpay') {
+      req.app.get('io')?.to('admins').emit('order:new', publicOrder(order));
+    }
     return ApiResponse.success(res, 201, publicOrder(order, true), 'Order created');
   } catch (error) {
     if (error.code === 11000) {

@@ -51,6 +51,10 @@ function OrderSuccess() {
             <span>Created</span>
             <strong>{new Date(order.createdAt).toLocaleString()}</strong>
           </div>
+          <div>
+            <span>Payment</span>
+            <strong>{order.paymentStatus || (order.status === 'demo' ? 'Demo' : 'Pending')}</strong>
+          </div>
         </div>
 
         <div className="confirmation-items">

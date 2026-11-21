@@ -1273,6 +1273,28 @@
   font-size: 10px;
 }
 
+.admin-order-payment {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 12px;
+  color: rgb(212 175 55 / 48%);
+  font-size: 9px;
+}
+
+.admin-order-payment strong {
+  color: var(--color-sapphire);
+  font-size: 9px;
+}
+
+.admin-order-payment small {
+  grid-column: 1 / -1;
+  color: rgb(212 175 55 / 32%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .admin-order-card footer {
   margin-top: 14px;
   border-top: 1px solid rgb(212 175 55 / 8%);

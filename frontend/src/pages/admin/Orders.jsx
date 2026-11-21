@@ -3,6 +3,7 @@ import { ReceiptText, Search } from 'lucide-react';
 import { useOrders } from '../../hooks/useOrders.js';
 import { useSocket } from '../../hooks/useSocket.js';
 import { orderService } from '../../services/orderService.js';
+import { paymentService } from '../../services/paymentService.js';
 
 function Orders() {
   const [status, setStatus] = useState('');
@@ -34,6 +35,15 @@ function Orders() {
       setOrders((current) => current.map((item) => item._id === order._id ? updated : item));
     } catch (requestError) {
       window.alert(requestError.message || 'Unable to update order');
+    }
+  };
+
+  const refundPayment = async (order) => {
+    try {
+      await paymentService.refund(order._id);
+      await refresh();
+    } catch (requestError) {
+      window.alert(requestError.message || 'Unable to initiate refund');
     }
   };
 
@@ -87,6 +97,11 @@ function Orders() {
                 ))}
               </div>
               {order.specialInstructions && <p className="admin-order-instructions">“{order.specialInstructions}”</p>}
+              <div className="admin-order-payment">
+                <span>{order.paymentMethod === 'razorpay' ? 'Razorpay online' : 'At restaurant'}</span>
+                <strong>{order.paymentStatus}</strong>
+                {order.razorpayPaymentId && <small>{order.razorpayPaymentId}</small>}
+              </div>
               <footer>
                 <strong>${order.total.toFixed(2)}</strong>
                 <div>
@@ -100,6 +115,7 @@ function Orders() {
                   {order.orderStatus === 'PREPARING' && <button type="button" onClick={() => updateStatus(order, 'READY')}>Mark ready</button>}
                   {order.orderStatus === 'READY' && <button type="button" onClick={() => updateStatus(order, 'SERVED')}>Mark served</button>}
                   {order.orderStatus === 'SERVED' && <button type="button" onClick={() => updateStatus(order, 'COMPLETED')}>Complete</button>}
+                  {order.paymentStatus === 'PAID' && <button type="button" className="danger" onClick={() => refundPayment(order)}>Refund</button>}
                 </div>
               </footer>
             </article>

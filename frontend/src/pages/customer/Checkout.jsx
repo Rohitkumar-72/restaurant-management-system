@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CartSummary from '../../components/customer/CartSummary.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { orderService } from '../../services/orderService.js';
+import { loadRazorpayCheckout, paymentService } from '../../services/paymentService.js';
 
 const validateMobile = (value) => /^[6-9]\d{9}$/.test(value.replace(/\D/g, '').slice(-10));
 
@@ -20,6 +21,7 @@ function Checkout() {
     orderType: 'dine-in',
     tableNumber: '',
     instructions: '',
+    paymentMethod: form.paymentMethod === 'online' ? 'razorpay' : 'pay_at_counter',
   });
 
   useEffect(() => {
@@ -76,6 +78,65 @@ function Checkout() {
         },
         idempotencyKey,
       );
+
+      if (form.paymentMethod === 'online') {
+        await loadRazorpayCheckout();
+        const payment = await paymentService.createPaymentOrder(order._id);
+        const checkout = new window.Razorpay({
+          key: payment.keyId,
+          amount: payment.amount,
+          currency: payment.currency,
+          name: 'Sapphire Vista',
+          description: `Order ${order.orderNumber}`,
+          order_id: payment.razorpayOrderId,
+          prefill: {
+            name: form.name.trim(),
+            contact: form.mobile.replace(/\D/g, '').slice(-10),
+          },
+          theme: { color: '#287bff' },
+          handler: async (response) => {
+            try {
+              const verified = await paymentService.verifyPayment({
+                orderId: order._id,
+                ...response,
+              });
+              sessionStorage.removeItem('sapphire-order-draft');
+              clearCart();
+              navigate('/order-confirmation', { state: { order: verified.order || { ...order, paymentStatus: 'PAID' } }, replace: true });
+            } catch (verificationError) {
+              setErrors({ submit: verificationError.message || 'Payment verification failed.' });
+            } finally {
+              submittingRef.current = false;
+              setProcessing(false);
+            }
+          },
+          modal: {
+            ondismiss: async () => {
+              try {
+                await paymentService.reportFailure(order._id, 'Payment cancelled by customer');
+              } catch {
+                // Keep the checkout usable if failure reporting is unavailable.
+              } finally {
+                setProcessing(false);
+                submittingRef.current = false;
+              }
+            },
+          },
+        });
+        checkout.on('payment.failed', async (response) => {
+          try {
+            await paymentService.reportFailure(order._id, response.error?.description || 'Payment failed');
+          } catch {
+            // The verification endpoint remains the source of truth.
+          } finally {
+            setErrors({ submit: 'Payment failed. Please retry.' });
+            setProcessing(false);
+            submittingRef.current = false;
+          }
+        });
+        checkout.open();
+        return;
+      }
 
       sessionStorage.removeItem('sapphire-order-draft');
       clearCart();
@@ -150,6 +211,22 @@ function Checkout() {
               </div>
             </fieldset>
 
+            <fieldset>
+              <legend>Payment method</legend>
+              <div className="order-type-grid">
+                <label className={form.paymentMethod === 'pay_at_counter' ? 'order-type-option active' : 'order-type-option'}>
+                  <input type="radio" name="paymentMethod" value="pay_at_counter" checked={form.paymentMethod === 'pay_at_counter'} onChange={updateField} />
+                  <CheckCircle2 size={20} />
+                  <span><strong>Pay at restaurant</strong><small>Cash or counter payment</small></span>
+                </label>
+                <label className={form.paymentMethod === 'online' ? 'order-type-option active' : 'order-type-option'}>
+                  <input type="radio" name="paymentMethod" value="online" checked={form.paymentMethod === 'online'} onChange={updateField} />
+                  <UtensilsCrossed size={20} />
+                  <span><strong>Pay online</strong><small>Secure Razorpay checkout</small></span>
+                </label>
+              </div>
+            </fieldset>
+
             {errors.cart && <p className="field-error">{errors.cart}</p>}
             {errors.submit && <p className="field-error" role="alert">{errors.submit}</p>}
             <motion.button
@@ -158,7 +235,9 @@ function Checkout() {
               disabled={processing}
               whileTap={{ scale: 0.98 }}
             >
-              {processing ? 'Submitting order...' : 'Place order'}
+              {processing
+                ? (form.paymentMethod === 'online' ? 'Opening secure payment...' : 'Submitting order...')
+                : (form.paymentMethod === 'online' ? 'Continue to secure payment' : 'Place order')}
             </motion.button>
           </form>
 
