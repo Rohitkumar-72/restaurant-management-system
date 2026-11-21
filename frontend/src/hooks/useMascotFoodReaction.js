@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getFoodMascotReaction } from '../utils/mascotReactions.js';
+import { MASCOT_PRIORITY } from '../utils/mascotReactions.js';
 import { useMascotReaction } from '../context/MascotReactionContext.jsx';
 
 export function useMascotFoodReaction(mascotRef) {
@@ -31,12 +32,23 @@ export function useMascotFoodReaction(mascotRef) {
     const foodId = food.id || food._id || food.slug || food.name;
     if (activeFoodRef.current?.id === foodId && source === 'hover') return;
 
-    const firstInteraction = !visitedIdsRef.current.has(foodId);
-    visitedIdsRef.current.add(foodId);
+    const firstInteraction = shared?.rememberFood
+      ? shared.rememberFood(food)
+      : !visitedIdsRef.current.has(foodId);
+    if (!shared?.rememberFood) visitedIdsRef.current.add(foodId);
     const reaction = getFoodMascotReaction(food, { firstInteraction });
+    const priority =
+      reaction.emotion === 'EXCITED' || reaction.emotion === 'LOVE'
+        ? MASCOT_PRIORITY.MEDIUM
+        : MASCOT_PRIORITY.LOW;
 
-    if (resolvedMascotRef?.current?.setEmotion) {
-      resolvedMascotRef.current.setEmotion(reaction.emotion, reaction.duration);
+    if (shared?.requestReaction) {
+      shared.requestReaction(reaction.emotion, reaction.duration, {
+        key: `food:${foodId}:${reaction.emotion}`,
+        priority,
+      });
+    } else if (resolvedMascotRef?.current?.setEmotion) {
+      resolvedMascotRef.current.setEmotion(reaction.emotion, reaction.duration, priority);
     }
 
     let targetX = 0;
@@ -72,7 +84,14 @@ export function useMascotFoodReaction(mascotRef) {
       targetRef.current = { x: 0, y: 0, active: false, lean: 0 };
       activeFoodRef.current = null;
       setActiveFood(null);
-      resolvedMascotRef?.current?.setEmotion?.('IDLE');
+      if (shared?.requestReaction) {
+        shared.requestReaction('IDLE', null, {
+          key: 'food:leave',
+          priority: MASCOT_PRIORITY.LOW,
+        });
+      } else {
+        resolvedMascotRef?.current?.setEmotion?.('IDLE', null, MASCOT_PRIORITY.LOW);
+      }
       leaveTimerRef.current = null;
     }, 260);
   }, [clearLeaveTimer, resolvedMascotRef]);

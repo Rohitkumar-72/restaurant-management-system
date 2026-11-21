@@ -11,6 +11,13 @@ export const MASCOT_EMOTIONS = Object.freeze([
   'THINKING',
 ]);
 
+export const MASCOT_PRIORITY = Object.freeze({
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  CRITICAL: 4,
+});
+
 export const normalizeMascotEmotion = (emotion) => {
   const normalized = typeof emotion === 'string' ? emotion.trim().toUpperCase() : '';
   return MASCOT_EMOTIONS.includes(normalized) ? normalized : 'IDLE';

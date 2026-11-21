@@ -269,6 +269,9 @@ function MascotScene({
       let visitX = 0;
       let visitY = 0;
       let visitLean = 0;
+      let idleLookUntil = 0;
+      let idleLookX = 0;
+      let nextIdleLook = performance.now() + 6500 + Math.random() * 5500;
 
       const startTime = performance.now();
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -319,6 +322,18 @@ function MascotScene({
         };
         const profile = profiles[emotionName] || profiles.IDLE;
 
+        if (emotionName === 'IDLE') {
+          if (now >= nextIdleLook) {
+            idleLookX = (Math.random() * 2 - 1) * 0.1;
+            idleLookUntil = now + 900 + Math.random() * 900;
+            nextIdleLook = idleLookUntil + 7000 + Math.random() * 6000;
+          }
+        } else {
+          idleLookX = 0;
+          idleLookUntil = 0;
+        }
+        if (now >= idleLookUntil) idleLookX *= 0.92;
+
         const entrance = Math.min(1, emotionAge * 3);
         const celebrationPulse = emotionName === 'CELEBRATING'
           ? Math.max(0, Math.sin(elapsed * 5.4)) * 0.08
@@ -342,14 +357,14 @@ function MascotScene({
 
         head.rotation.y = target.active
           ? Math.max(-0.24, Math.min(0.24, visitX * 0.24))
-          : Math.max(-0.22, Math.min(0.22, pointerX * 0.22));
+          : Math.max(-0.22, Math.min(0.22, pointerX * 0.22 + idleLookX));
         head.rotation.x = profile.tilt * entrance
           + (target.active
             ? Math.max(-0.12, Math.min(0.12, visitY * -0.1))
             : Math.max(-0.12, Math.min(0.12, pointerY * -0.1)));
         head.rotation.z = profile.tilt * 0.12 * entrance;
 
-        const gazeX = target.active ? visitX : pointerX;
+        const gazeX = target.active ? visitX : pointerX + idleLookX * 2;
         pupilLeft.position.x = -0.34 + gazeX * 0.035;
         pupilRight.position.x = 0.34 + gazeX * 0.035;
         irisLeft.position.x = -0.34 + gazeX * 0.035;
