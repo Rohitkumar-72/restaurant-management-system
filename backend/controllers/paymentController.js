@@ -10,6 +10,7 @@ const {
   createRazorpayRefund,
 } = require('../services/paymentService');
 const { getRazorpayConfig } = require('../config/razorpay');
+const RestaurantTable = require('../models/Table');
 
 const requireDatabase = () => {
   if (mongoose.connection.readyState !== 1) throw new ApiError(503, 'Database is unavailable');
@@ -120,6 +121,13 @@ exports.verifyPayment = async (req, res, next) => {
     order.paidAt = payment.paidAt;
     order.orderStatus = 'CONFIRMED';
     await order.save();
+    if (order.tableId) {
+      const table = await RestaurantTable.findById(order.tableId);
+      if (table) {
+        table.status = 'OCCUPIED';
+        await table.save();
+      }
+    }
 
     const safe = publicPaymentOrder(order);
     req.app.get('io')?.to('admins').emit('order:new', safe);

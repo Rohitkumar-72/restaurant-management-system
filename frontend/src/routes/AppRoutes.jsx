@@ -16,6 +16,7 @@ import AdminSettings from '../pages/admin/Settings.jsx';
 import AdminLogin from '../pages/admin/AdminLogin.jsx';
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
 import TrackOrder from '../pages/customer/TrackOrder.jsx';
+import AdminTables from '../pages/admin/AdminTables.jsx';
 
 function AppRoutes() {
   return (
@@ -36,6 +37,7 @@ function AppRoutes() {
           <Route path="orders" element={<AdminOrders />} />
           <Route path="menu-management" element={<AdminMenuManagement />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="tables" element={<AdminTables />} />
           <Route path="customers" element={<AdminCustomers />} />
           <Route path="analytics" element={<AdminAnalytics />} />
           <Route path="settings" element={<AdminSettings />} />

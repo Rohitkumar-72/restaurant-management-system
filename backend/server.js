@@ -15,6 +15,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const http = require('http');
 const { initializeSocket } = require('./socket/socketServer');
 const paymentRoutes = require('./routes/paymentRoutes');
+const tableRoutes = require('./routes/tableRoutes');
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -38,6 +39,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/tables', tableRoutes);
 
 app.use(errorMiddleware);
 

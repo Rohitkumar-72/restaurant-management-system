@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema(
     total: { type: Number, required: true, min: 0 },
     orderType: { type: String, required: true, enum: ['dine-in', 'takeaway'] },
     tableNumber: { type: String, trim: true, maxlength: 20, default: null },
+    tableId: { type: mongoose.Schema.Types.ObjectId, ref: 'Table', default: null, index: true },
     specialInstructions: { type: String, trim: true, maxlength: 1000, default: '' },
     paymentMethod: { type: String, enum: ['pay_at_counter', 'cash', 'not_required', 'razorpay'], default: 'pay_at_counter' },
     paymentStatus: { type: String, enum: ['not_required', 'PENDING', 'PROCESSING', 'PAID', 'FAILED', 'CANCELLED', 'REFUNDED'], default: 'PENDING' },

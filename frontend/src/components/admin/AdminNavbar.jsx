@@ -6,6 +6,7 @@ const titles = {
   '/admin/orders': 'Orders',
   '/admin/menu-management': 'Menu Management',
   '/admin/categories': 'Categories',
+  '/admin/tables': 'Tables & QR',
   '/admin/customers': 'Customers',
   '/admin/analytics': 'Analytics',
   '/admin/settings': 'Settings',

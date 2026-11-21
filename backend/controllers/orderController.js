@@ -4,6 +4,7 @@ const Order = require('../models/Order');
 const Food = require('../models/Food');
 const ApiResponse = require('../utils/ApiResponse');
 const ApiError = require('../utils/ApiError');
+const RestaurantTable = require('../models/Table');
 
 const ORDER_TRANSITIONS = {
   PLACED: ['CONFIRMED', 'REJECTED', 'CANCELLED'],
@@ -31,7 +32,7 @@ exports.createOrder = async (req, res, next) => {
       if (existing) return ApiResponse.success(res, 200, publicOrder(existing, true), 'Existing order returned');
     }
 
-    const { customer, items, orderType, tableNumber, specialInstructions, paymentMethod } = req.body;
+    const { customer, items, orderType, tableNumber, tableId, specialInstructions, paymentMethod } = req.body;
     if (!customer?.name || !customer?.mobile) throw new ApiError(400, 'Customer name and mobile number are required');
     if (!/^[6-9]\d{9}$/.test(String(customer.mobile).replace(/\D/g, '').slice(-10))) {
       throw new ApiError(400, 'Enter a valid 10-digit mobile number');
@@ -39,6 +40,17 @@ exports.createOrder = async (req, res, next) => {
     if (!['dine-in', 'takeaway'].includes(orderType)) throw new ApiError(400, 'Invalid order type');
     if (orderType === 'dine-in' && (!tableNumber || !/^\d{1,3}$/.test(String(tableNumber)))) {
       throw new ApiError(400, 'A valid table number is required');
+    }
+
+    let validatedTable = null;
+    if (orderType === 'dine-in') {
+      if (!tableId || !mongoose.Types.ObjectId.isValid(tableId)) throw new ApiError(400, 'A valid table is required');
+      validatedTable = await RestaurantTable.findById(tableId);
+      if (!validatedTable) throw new ApiError(404, 'Table not found');
+      if (!validatedTable.isActive) throw new ApiError(403, 'This table is inactive');
+      if (validatedTable.tableNumber !== String(tableNumber).trim()) {
+        throw new ApiError(400, 'Table number does not match the selected table');
+      }
     }
     if (!Array.isArray(items) || items.length === 0 || items.length > 50) {
       throw new ApiError(400, 'Cart must contain between 1 and 50 items');
@@ -93,6 +105,7 @@ exports.createOrder = async (req, res, next) => {
       total: Number(subtotal.toFixed(2)),
       orderType,
       tableNumber: orderType === 'dine-in' ? String(tableNumber).trim() : null,
+      tableId: validatedTable?._id || null,
       specialInstructions: typeof specialInstructions === 'string' ? specialInstructions.trim().slice(0, 1000) : '',
       paymentMethod: ['cash', 'pay_at_counter', 'not_required', 'razorpay'].includes(paymentMethod)
         ? paymentMethod
@@ -101,6 +114,11 @@ exports.createOrder = async (req, res, next) => {
       orderStatus: 'PLACED',
       estimatedMinutes: 25,
     });
+
+    if (validatedTable) {
+      validatedTable.status = 'ORDERING';
+      await validatedTable.save();
+    }
 
     if (order.paymentMethod !== 'razorpay') {
       req.app.get('io')?.to('admins').emit('order:new', publicOrder(order));
@@ -172,6 +190,23 @@ exports.updateOrderStatus = async (req, res, next) => {
       order.rejectionReason = typeof req.body.reason === 'string' ? req.body.reason.slice(0, 300) : '';
     }
     await order.save();
+
+    if (order.tableId) {
+      const table = await RestaurantTable.findById(order.tableId);
+      if (table) {
+        if (['COMPLETED', 'CANCELLED', 'REJECTED'].includes(status)) {
+          const activeOrder = await Order.findOne({
+            tableId: table._id,
+            orderStatus: { $nin: ['COMPLETED', 'CANCELLED', 'REJECTED'] },
+            _id: { $ne: order._id },
+          }).lean();
+          table.status = activeOrder ? 'OCCUPIED' : 'AVAILABLE';
+        } else {
+          table.status = 'OCCUPIED';
+        }
+        await table.save();
+      }
+    }
     const safe = publicOrder(order);
     req.app.get('io')?.to('admins').emit('order:status-changed', safe);
     req.app.get('io')?.to(`order:${order._id}`).emit('order:status-changed', safe);

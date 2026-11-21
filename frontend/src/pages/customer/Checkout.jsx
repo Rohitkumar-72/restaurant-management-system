@@ -6,6 +6,7 @@ import CartSummary from '../../components/customer/CartSummary.jsx';
 import { useCart } from '../../context/CartContext.jsx';
 import { orderService } from '../../services/orderService.js';
 import { loadRazorpayCheckout, paymentService } from '../../services/paymentService.js';
+import { useTable } from '../../context/TableContext.jsx';
 
 const validateMobile = (value) => /^[6-9]\d{9}$/.test(value.replace(/\D/g, '').slice(-10));
 
@@ -15,6 +16,7 @@ function Checkout() {
   const { items, itemCount, subtotal, discount, total, clearCart } = useCart();
   const [processing, setProcessing] = useState(false);
   const [errors, setErrors] = useState({});
+  const { table: assignedTable, clearTable } = useTable();
   const [form, setForm] = useState({
     name: '',
     mobile: '',
@@ -29,6 +31,16 @@ function Checkout() {
       navigate('/cart', { replace: true });
     }
   }, [items.length, navigate]);
+
+  useEffect(() => {
+    if (assignedTable) {
+      setForm((current) => ({
+        ...current,
+        orderType: 'dine-in',
+        tableNumber: assignedTable.tableNumber,
+      }));
+    }
+  }, [assignedTable]);
 
   const updateField = (event) => {
     const { name, value } = event.target;
@@ -46,6 +58,9 @@ function Checkout() {
     if (!['dine-in', 'takeaway'].includes(form.orderType)) nextErrors.orderType = 'Choose an order type.';
     if (form.orderType === 'dine-in' && (!form.tableNumber.trim() || !/^\d{1,3}$/.test(form.tableNumber))) {
       nextErrors.tableNumber = 'Enter a valid table number.';
+    }
+    if (form.orderType === 'dine-in' && !assignedTable) {
+      nextErrors.tableNumber = 'Select a valid table from a Sapphire Vista QR code.';
     }
     if (items.length === 0) nextErrors.cart = 'Your cart is empty.';
 
@@ -73,6 +88,7 @@ function Checkout() {
           })),
           orderType: form.orderType,
           tableNumber: form.orderType === 'dine-in' ? form.tableNumber.trim() : null,
+          tableId: form.orderType === 'dine-in' ? assignedTable?.id : null,
           specialInstructions: form.instructions.trim(),
           paymentMethod: 'pay_at_counter',
         },
@@ -197,7 +213,17 @@ function Checkout() {
               {form.orderType === 'dine-in' && (
                 <div className="form-field table-field">
                   <label htmlFor="checkout-table">Table number</label>
-                  <input id="checkout-table" name="tableNumber" value={form.tableNumber} onChange={updateField} inputMode="numeric" placeholder="e.g. 12" />
+                  {assignedTable ? (
+                    <div className="assigned-table">
+                      <strong>Table {assignedTable.tableNumber}</strong>
+                      <button type="button" onClick={clearTable}>Clear table</button>
+                    </div>
+                  ) : (
+                    <div className="assigned-table">
+                      <strong>No valid table selected</strong>
+                      <span>Scan a table QR code</span>
+                    </div>
+                  )}
                   {errors.tableNumber && <span className="field-error">{errors.tableNumber}</span>}
                 </div>
               )}

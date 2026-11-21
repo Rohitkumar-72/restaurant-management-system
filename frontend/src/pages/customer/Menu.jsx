@@ -8,6 +8,7 @@ import Modal from '../../components/common/Modal.jsx';
 import { menuCategories, menuItems } from '../../data/menuData.js';
 import { useCart } from '../../context/CartContext.jsx';
 import { foodService } from '../../services/foodService.js';
+import { useTable } from '../../context/TableContext.jsx';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85';
 
@@ -24,6 +25,7 @@ function Menu() {
   const [loadAttempt, setLoadAttempt] = useState(0);
   const reduceMotion = useReducedMotion();
   const { addItem } = useCart();
+  const { table: assignedTable, loading: tableLoading, error: tableError, clearTable } = useTable();
 
   useEffect(() => {
     let active = true;
@@ -126,6 +128,21 @@ function Menu() {
       </section>
 
       <section className="menu-content section-shell">
+        {(assignedTable || tableLoading || tableError) && (
+          <div className="table-session-banner" role="status">
+            {assignedTable ? (
+              <>
+                <div>
+                  <span>Welcome to Sapphire Vista</span>
+                  <strong>You're dining at Table {assignedTable.tableNumber}</strong>
+                </div>
+                <button type="button" onClick={clearTable}>Clear table</button>
+              </>
+            ) : (
+              <span>{tableLoading ? 'Validating table...' : tableError}</span>
+            )}
+          </div>
+        )}
         {usingFallback && (
           <div className="menu-fallback-notice" role="status">
             <span>Demo menu</span>

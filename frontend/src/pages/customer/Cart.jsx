@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import CartItem from '../../components/customer/CartItem.jsx';
 import CartSummary from '../../components/customer/CartSummary.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import { useTable } from '../../context/TableContext.jsx';
 
 function Cart() {
+  const { table: assignedTable } = useTable();
   const {
     items,
     itemCount,
@@ -32,6 +34,12 @@ function Cart() {
           </Link>
         )}
       </section>
+      {assignedTable && (
+        <div className="cart-table-indicator section-shell">
+          <span>Dine-in table</span>
+          <strong>Table {assignedTable.tableNumber}</strong>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <motion.section
