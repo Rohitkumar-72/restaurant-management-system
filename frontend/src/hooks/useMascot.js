@@ -1,0 +1,1 @@
+export { useMascotEmotion as useMascot } from '../components/mascot/MascotController.jsx';

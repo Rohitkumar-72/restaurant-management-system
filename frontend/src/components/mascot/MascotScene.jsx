@@ -25,6 +25,7 @@ function MascotScene({
   animated = true,
   className = '',
   ariaLabel = 'Sapphire Vista 3D restaurant mascot',
+  emotionRef,
 }) {
   const canvasRef = useRef(null);
   const [fallback, setFallback] = useState(false);
@@ -171,6 +172,31 @@ function MascotScene({
       const cheekRight = cheekLeft.clone('cheek-right');
       cheekRight.position.x = 0.54;
 
+      const browLeft = MeshBuilder.CreateCapsule('brow-left', {
+        height: 0.28,
+        radius: 0.025,
+        tessellation: 10,
+      }, scene);
+      browLeft.rotation.z = Math.PI / 2;
+      browLeft.position.set(-0.34, 0.43, -0.69);
+      browLeft.material = dark;
+      browLeft.parent = head;
+
+      const browRight = browLeft.clone('brow-right');
+      browRight.position.x = 0.34;
+
+      const loveHeartLeft = MeshBuilder.CreateSphere('love-heart-left', { diameter: 0.11, segments: 10 }, scene);
+      loveHeartLeft.position.set(-0.2, 0.86, -0.72);
+      loveHeartLeft.material = gold;
+      loveHeartLeft.parent = head;
+      loveHeartLeft.visibility = 0;
+
+      const loveHeartRight = loveHeartLeft.clone('love-heart-right');
+      loveHeartRight.position.x = 0.2;
+
+      const loveHeartTop = loveHeartLeft.clone('love-heart-top');
+      loveHeartTop.position.set(0, 1.02, -0.72);
+
       const hat = new TransformNode('hat', scene);
       hat.parent = head;
       hat.position.y = 0.82;
@@ -203,6 +229,8 @@ function MascotScene({
         puff.parent = hat;
       });
 
+      const arms = {};
+      const legs = {};
       [-1, 1].forEach((side) => {
         const arm = MeshBuilder.CreateCapsule(`arm-${side}`, {
           height: 0.9,
@@ -213,6 +241,7 @@ function MascotScene({
         arm.rotation.z = side * -0.42;
         arm.material = skin;
         arm.parent = character;
+        arms[side] = arm;
 
         const leg = MeshBuilder.CreateCapsule(`leg-${side}`, {
           height: 0.58,
@@ -222,6 +251,7 @@ function MascotScene({
         leg.position.set(side * 0.42, -1.18, -0.02);
         leg.material = sapphireBlue;
         leg.parent = character;
+        legs[side] = leg;
 
         const shoe = MeshBuilder.CreateSphere(`shoe-${side}`, { diameter: 0.46, segments: 12 }, scene);
         shoe.scaling.set(1.18, 0.52, 1);
@@ -266,32 +296,98 @@ function MascotScene({
         }
 
         const elapsed = (now - startTime) / 1000;
-        const float = Math.sin(elapsed * 1.35) * 0.09;
+        const emotionName = emotionRef?.current?.name || 'IDLE';
+        const emotionAge = emotionRef?.current?.changedAt
+          ? (now - emotionRef.current.changedAt) / 1000
+          : elapsed;
+
+        const profiles = {
+          IDLE: { eye: 1.15, float: 0.09, speed: 1.35, tilt: 0, bounce: 0, sway: 0.025, brow: 0 },
+          HAPPY: { eye: 1.08, float: 0.12, speed: 1.55, tilt: 0.055, bounce: 0.08, sway: 0.018, brow: -0.025 },
+          EXCITED: { eye: 1.38, float: 0.17, speed: 2.4, tilt: -0.025, bounce: 0.16, sway: 0.055, brow: -0.08 },
+          CURIOUS: { eye: 1.12, float: 0.07, speed: 1.05, tilt: 0.18, bounce: 0.02, sway: 0.018, brow: 0.12 },
+          LOVE: { eye: 0.82, float: 0.1, speed: 1.15, tilt: 0.035, bounce: 0.06, sway: 0.018, brow: -0.055 },
+          SURPRISED: { eye: 1.48, float: 0.15, speed: 2.2, tilt: 0.015, bounce: 0.14, sway: 0.012, brow: 0.18 },
+          SAD: { eye: 0.78, float: 0.045, speed: 0.75, tilt: -0.12, bounce: -0.06, sway: 0.012, brow: 0.14 },
+          SLEEPY: { eye: 0.38, float: 0.045, speed: 0.62, tilt: 0.12, bounce: -0.04, sway: 0.008, brow: 0.09 },
+          CELEBRATING: { eye: 1.12, float: 0.18, speed: 2.8, tilt: 0.04, bounce: 0.21, sway: 0.05, brow: -0.06 },
+          THINKING: { eye: 1.04, float: 0.055, speed: 0.82, tilt: -0.17, bounce: 0.015, sway: 0.012, brow: 0.06 },
+        };
+        const profile = profiles[emotionName] || profiles.IDLE;
+
+        const entrance = Math.min(1, emotionAge * 3);
+        const celebrationPulse = emotionName === 'CELEBRATING'
+          ? Math.max(0, Math.sin(elapsed * 5.4)) * 0.08
+          : 0;
+        const surprisedPulse = emotionName === 'SURPRISED'
+          ? Math.max(0, Math.sin(elapsed * 4.2)) * 0.04
+          : 0;
+        const float = Math.sin(elapsed * profile.speed) * profile.float
+          + profile.bounce * 0.45 + celebrationPulse + surprisedPulse;
         character.position.y = float;
-        character.rotation.z = Math.sin(elapsed * 0.72) * 0.025;
+        character.rotation.z = Math.sin(elapsed * profile.speed * 0.55) * profile.sway;
         character.rotation.y = hover
           ? Math.max(-0.24, Math.min(0.24, pointerX * 0.24))
-          : Math.sin(elapsed * 0.55) * 0.035;
+          : Math.sin(elapsed * 0.55) * profile.sway;
 
         head.rotation.y = Math.max(-0.22, Math.min(0.22, pointerX * 0.22));
-        head.rotation.x = Math.max(-0.12, Math.min(0.12, pointerY * -0.1));
+        head.rotation.x = profile.tilt * entrance + Math.max(-0.12, Math.min(0.12, pointerY * -0.1));
+        head.rotation.z = profile.tilt * 0.12 * entrance;
 
         pupilLeft.position.x = -0.34 + pointerX * 0.035;
         pupilRight.position.x = 0.34 + pointerX * 0.035;
         irisLeft.position.x = -0.34 + pointerX * 0.035;
         irisRight.position.x = 0.34 + pointerX * 0.035;
 
-        if (now >= nextBlink) {
-          blinkUntil = now + 140;
-          nextBlink = now + 2400 + Math.random() * 2600;
+        if (emotionName === 'EXCITED' || emotionName === 'SURPRISED') {
+          blinkUntil = 0;
+          nextBlink = now + 1800;
+        } else if (emotionName === 'SLEEPY') {
+          if (now >= nextBlink) {
+            blinkUntil = now + 520;
+            nextBlink = now + 2400 + Math.random() * 2200;
+          }
+        } else if (now >= nextBlink) {
+          blinkUntil = now + (emotionName === 'HAPPY' || emotionName === 'LOVE' ? 105 : 140);
+          nextBlink = now + 2600 + Math.random() * 2400;
         }
         const blinking = now < blinkUntil;
-        eyeLeft.scaling.y = blinking ? 0.08 : 1.15;
-        eyeRight.scaling.y = blinking ? 0.08 : 1.15;
+        let eyeScale = profile.eye;
+        if (emotionName === 'SLEEPY') eyeScale = 0.38 + Math.sin(elapsed * 0.8) * 0.04;
+        if (blinking) eyeScale = 0.08;
+        eyeLeft.scaling.y += (eyeScale - eyeLeft.scaling.y) * 0.18;
+        eyeRight.scaling.y += (eyeScale - eyeRight.scaling.y) * 0.18;
         pupilLeft.visibility = blinking ? 0 : 1;
         pupilRight.visibility = blinking ? 0 : 1;
         irisLeft.visibility = blinking ? 0 : 1;
         irisRight.visibility = blinking ? 0 : 1;
+
+        const browLift = emotionName === 'CURIOUS' || emotionName === 'SURPRISED' ? 0.08 : profile.brow;
+        browLeft.position.y += (0.43 + browLift - browLeft.position.y) * 0.12;
+        browRight.position.y += (0.43 + (emotionName === 'CURIOUS' ? -0.04 : browLift) - browRight.position.y) * 0.12;
+        browLeft.rotation.z += ((emotionName === 'SAD' ? -0.18 : emotionName === 'CURIOUS' ? 0.18 : Math.PI / 2) - browLeft.rotation.z) * 0.12;
+        browRight.rotation.z += ((emotionName === 'SAD' ? 0.18 : emotionName === 'CURIOUS' ? -0.18 : Math.PI / 2) - browRight.rotation.z) * 0.12;
+
+        smile.scaling.y += ((emotionName === 'SAD' || emotionName === 'SLEEPY' ? 0.55 : 1) - smile.scaling.y) * 0.1;
+        smile.rotation.z += (((emotionName === 'SAD' || emotionName === 'SLEEPY') ? 0 : Math.PI) - smile.rotation.z) * 0.12;
+        smile.position.y += ((emotionName === 'SURPRISED' ? -0.22 : emotionName === 'SAD' ? -0.34 : -0.28) - smile.position.y) * 0.12;
+
+        const loveVisible = emotionName === 'LOVE' ? 1 : 0;
+        loveHeartLeft.visibility = loveVisible;
+        loveHeartRight.visibility = loveVisible;
+        loveHeartTop.visibility = loveVisible;
+        if (loveVisible) {
+          const heartBob = Math.sin(elapsed * 2.2) * 0.06;
+          loveHeartLeft.position.y = 0.86 + heartBob;
+          loveHeartRight.position.y = 0.86 + heartBob;
+          loveHeartTop.position.y = 1.02 + heartBob;
+        }
+
+        cheekLeft.visibility = ['HAPPY', 'LOVE', 'CELEBRATING', 'EXCITED'].includes(emotionName) ? 1 : 0.28;
+        cheekRight.visibility = cheekLeft.visibility;
+
+        arms[-1].rotation.z += ((emotionName === 'CELEBRATING' ? -1.05 : emotionName === 'EXCITED' ? -0.72 : -0.42) - arms[-1].rotation.z) * 0.1;
+        arms[1].rotation.z += ((emotionName === 'CELEBRATING' ? 1.05 : emotionName === 'EXCITED' ? 0.72 : 0.42) - arms[1].rotation.z) * 0.1;
 
         scene.render();
       });
