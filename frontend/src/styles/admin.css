@@ -1108,3 +1108,222 @@
     animation-duration: 1ms;
   }
 }
+
+.admin-orders-heading,
+.admin-orders-tools,
+.admin-order-grid,
+.admin-order-card,
+.admin-order-customer,
+.admin-order-items,
+.admin-order-card footer,
+.admin-order-card footer div {
+  display: flex;
+}
+
+.admin-orders-heading {
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.admin-orders-heading h1 {
+  margin: 6px 0 0;
+  color: var(--color-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 38px;
+  font-weight: 400;
+}
+
+.admin-orders-live,
+.tracking-live {
+  border: 1px solid rgb(212 175 55 / 18%);
+  border-radius: 999px;
+  padding: 7px 9px;
+  color: rgb(212 175 55 / 58%);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-orders-live.connected,
+.tracking-live.connected {
+  border-color: rgb(40 123 255 / 28%);
+  color: var(--color-sapphire);
+}
+
+.admin-orders-tools {
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-orders-search {
+  width: 280px;
+  height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(212 175 55 / 12%);
+  padding: 0 12px;
+  color: rgb(212 175 55 / 44%);
+}
+
+.admin-orders-search input,
+.admin-orders-tools select {
+  border: 0;
+  outline: 0;
+  color: var(--color-gold);
+  background: var(--color-background);
+}
+
+.admin-orders-search input {
+  width: 100%;
+}
+
+.admin-orders-tools select {
+  height: 42px;
+  border: 1px solid rgb(212 175 55 / 12%);
+  padding: 0 10px;
+}
+
+.admin-orders-empty {
+  min-height: 260px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgb(212 175 55 / 10%);
+  color: rgb(212 175 55 / 58%);
+  text-align: center;
+}
+
+.admin-order-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-order-card {
+  min-width: 0;
+  flex-direction: column;
+  border: 1px solid rgb(212 175 55 / 12%);
+  padding: 16px;
+  background: rgb(11 11 12 / 88%);
+}
+
+.admin-order-card header,
+.admin-order-card footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-order-card header div {
+  display: grid;
+  gap: 3px;
+}
+
+.admin-order-card header div span {
+  color: rgb(212 175 55 / 38%);
+  font-size: 8px;
+  text-transform: uppercase;
+}
+
+.admin-order-card header div strong {
+  color: var(--color-gold);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.admin-order-customer {
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgb(212 175 55 / 8%);
+  border-bottom: 1px solid rgb(212 175 55 / 8%);
+  margin: 12px 0;
+  padding: 10px 0;
+  color: rgb(212 175 55 / 48%);
+  font-size: 10px;
+}
+
+.admin-order-customer strong {
+  color: var(--color-gold);
+}
+
+.admin-order-items {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-order-items div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: rgb(212 175 55 / 58%);
+  font-size: 10px;
+}
+
+.admin-order-items strong {
+  color: var(--color-sapphire);
+}
+
+.admin-order-instructions {
+  border-left: 1px solid var(--color-sapphire);
+  margin: 12px 0 0;
+  padding-left: 8px;
+  color: rgb(212 175 55 / 48%);
+  font-size: 10px;
+}
+
+.admin-order-card footer {
+  margin-top: 14px;
+  border-top: 1px solid rgb(212 175 55 / 8%);
+  padding-top: 12px;
+}
+
+.admin-order-card footer > strong {
+  color: var(--color-sapphire);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.admin-order-card footer div {
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-order-card footer button {
+  min-height: 34px;
+  border: 1px solid rgb(40 123 255 / 24%);
+  border-radius: 2px;
+  padding: 0 9px;
+  color: var(--color-sapphire);
+  background: rgb(40 123 255 / 5%);
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.admin-order-card footer button.danger {
+  border-color: rgb(212 175 55 / 18%);
+  color: rgb(212 175 55 / 58%);
+  background: transparent;
+}
+
+@media (max-width: 980px) {
+  .admin-order-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-orders-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-orders-search {
+    width: 100%;
+  }
+}

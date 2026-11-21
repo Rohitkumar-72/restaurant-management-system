@@ -25,17 +25,17 @@ function OrderSuccess() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="demo-label">DEMO ORDER — NOT SENT TO RESTAURANT</div>
+        <div className="demo-label">ORDER CONFIRMED</div>
         <div className="confirmation-success">
           <span><Check size={26} /></span>
-          <p className="eyebrow">Demo confirmation</p>
+          <p className="eyebrow">Live order confirmation</p>
           <h1>Thank you, {order.customer.name}.</h1>
         </div>
 
         <div className="confirmation-details">
           <div>
             <span>Order ID</span>
-            <strong>{order.orderId}</strong>
+            <strong>{order.orderNumber || order.orderId}</strong>
           </div>
           <div>
             <span>Order type</span>
@@ -71,6 +71,14 @@ function OrderSuccess() {
           <div><span>Total</span><strong>${order.total.toFixed(2)}</strong></div>
         </div>
 
+        {order.orderNumber && (
+          <Link
+            className="primary-button"
+            to={`/track-order/${order.orderNumber}?mobile=${encodeURIComponent(order.customer.mobile)}&token=${encodeURIComponent(order.trackingToken || '')}`}
+          >
+            Track this order <ArrowRight size={18} />
+          </Link>
+        )}
         <Link className="primary-button" to="/menu">
           Continue browsing <ArrowRight size={18} />
         </Link>

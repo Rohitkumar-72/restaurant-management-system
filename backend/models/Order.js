@@ -15,6 +15,8 @@ const orderItemSchema = new mongoose.Schema(
 const orderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true, trim: true },
+    trackingToken: { type: String, required: true, select: false, unique: true },
+    idempotencyKey: { type: String, trim: true, maxlength: 100, unique: true, sparse: true, select: false },
     customer: {
       name: { type: String, required: true, trim: true, maxlength: 100 },
       mobile: { type: String, required: true, trim: true, maxlength: 20 },
@@ -26,8 +28,11 @@ const orderSchema = new mongoose.Schema(
     orderType: { type: String, required: true, enum: ['dine-in', 'takeaway'] },
     tableNumber: { type: String, trim: true, maxlength: 20, default: null },
     specialInstructions: { type: String, trim: true, maxlength: 1000, default: '' },
-    paymentStatus: { type: String, enum: ['not_required', 'pending', 'paid', 'failed', 'refunded'], default: 'not_required' },
-    orderStatus: { type: String, enum: ['draft', 'demo', 'pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'], default: 'draft' },
+    paymentMethod: { type: String, enum: ['pay_at_counter', 'cash', 'not_required'], default: 'pay_at_counter' },
+    paymentStatus: { type: String, enum: ['not_required', 'pending', 'paid', 'failed', 'refunded'], default: 'pending' },
+    orderStatus: { type: String, enum: ['PLACED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED', 'COMPLETED', 'CANCELLED', 'REJECTED'], default: 'PLACED' },
+    estimatedMinutes: { type: Number, min: 5, max: 180, default: 25 },
+    rejectionReason: { type: String, trim: true, maxlength: 300, default: '' },
   },
   { timestamps: true },
 );

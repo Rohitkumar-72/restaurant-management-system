@@ -15,6 +15,7 @@ import AdminAnalytics from '../pages/admin/AdminAnalytics.jsx';
 import AdminSettings from '../pages/admin/Settings.jsx';
 import AdminLogin from '../pages/admin/AdminLogin.jsx';
 import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
+import TrackOrder from '../pages/customer/TrackOrder.jsx';
 
 function AppRoutes() {
   return (
@@ -25,6 +26,7 @@ function AppRoutes() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/order-confirmation" element={<OrderSuccess />} />
+        <Route path="/track-order/:orderNumber" element={<TrackOrder />} />
         <Route path="*" element={<Home />} />
       </Route>
       <Route path="/admin/login" element={<AdminLogin />} />

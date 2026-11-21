@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2, UtensilsCrossed } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import CartSummary from '../../components/customer/CartSummary.jsx';
 import { useCart } from '../../context/CartContext.jsx';
+import { orderService } from '../../services/orderService.js';
 
 const validateMobile = (value) => /^[6-9]\d{9}$/.test(value.replace(/\D/g, '').slice(-10));
 
@@ -33,7 +34,7 @@ function Checkout() {
     setErrors((current) => ({ ...current, [name]: '' }));
   };
 
-  const submitOrder = (event) => {
+  const submitOrder = async (event) => {
     event.preventDefault();
     if (submittingRef.current) return;
 
@@ -52,36 +53,39 @@ function Checkout() {
     submittingRef.current = true;
     setProcessing(true);
 
-    window.setTimeout(() => {
-      const orderItems = items.map((item) => ({
-        foodId: item.foodId,
-        name: item.name,
-        image: item.image,
-        unitPrice: item.unitPrice,
-        quantity: item.quantity,
-        itemTotal: Number((item.unitPrice * item.quantity).toFixed(2)),
-      }));
-      const order = {
-        orderId: `SV-D-${Date.now().toString().slice(-8)}`,
-        customer: {
-          name: form.name.trim(),
-          mobile: form.mobile.replace(/\D/g, '').slice(-10),
-        },
-        items: orderItems,
-        orderType: form.orderType,
-        tableNumber: form.orderType === 'dine-in' ? form.tableNumber.trim() : null,
-        specialInstructions: form.instructions.trim(),
-        subtotal,
-        discount,
-        total,
-        createdAt: new Date().toISOString(),
-        status: 'demo',
-      };
+    const idempotencyKey =
+      sessionStorage.getItem('sapphire-order-draft') ||
+      `SV-${crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`}`;
+    sessionStorage.setItem('sapphire-order-draft', idempotencyKey);
 
+    try {
+      const order = await orderService.createOrder(
+        {
+          customer: {
+            name: form.name.trim(),
+            mobile: form.mobile.replace(/\D/g, '').slice(-10),
+          },
+          items: items.map((item) => ({
+            foodId: item.foodId,
+            quantity: item.quantity,
+          })),
+          orderType: form.orderType,
+          tableNumber: form.orderType === 'dine-in' ? form.tableNumber.trim() : null,
+          specialInstructions: form.instructions.trim(),
+          paymentMethod: 'pay_at_counter',
+        },
+        idempotencyKey,
+      );
+
+      sessionStorage.removeItem('sapphire-order-draft');
       clearCart();
-      setProcessing(false);
       navigate('/order-confirmation', { state: { order }, replace: true });
-    }, 650);
+    } catch (requestError) {
+      setErrors({ submit: requestError.message || 'Unable to place order. Please try again.' });
+    } finally {
+      submittingRef.current = false;
+      setProcessing(false);
+    }
   };
 
   return (
@@ -147,13 +151,14 @@ function Checkout() {
             </fieldset>
 
             {errors.cart && <p className="field-error">{errors.cart}</p>}
+            {errors.submit && <p className="field-error" role="alert">{errors.submit}</p>}
             <motion.button
               className="primary-button demo-submit"
               type="submit"
               disabled={processing}
               whileTap={{ scale: 0.98 }}
             >
-              {processing ? 'Preparing demo order...' : 'Submit demo order'}
+              {processing ? 'Submitting order...' : 'Place order'}
             </motion.button>
           </form>
 
