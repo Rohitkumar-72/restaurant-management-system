@@ -1,6 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Award, Clock3, Leaf } from 'lucide-react';
 import FoodCard from '../../components/customer/FoodCard.jsx';
+const Mascot = lazy(() => import('../../components/mascot/Mascot.jsx'));
 
 const signatureDishes = [
   {
@@ -99,6 +101,17 @@ function Home() {
           <i />
           <span>Signature experience</span>
         </div>
+        <motion.div
+          className="home-mascot"
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.8, duration: 0.7 }}
+          aria-hidden="true"
+        >
+          <Suspense fallback={<div className="mascot-canvas mascot-fallback"><span>SV</span></div>}>
+            <Mascot size="medium" interactive animated />
+          </Suspense>
+        </motion.div>
       </section>
 
       <section className="signature-section section-shell" id="signature-dishes">
