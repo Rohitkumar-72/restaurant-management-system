@@ -12,6 +12,7 @@ export class ApiServiceError extends Error {
 export async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_URL}${path.startsWith('/') ? path : `/${path}`}`, {
     ...options,
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),

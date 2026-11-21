@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   ChevronLeft,
@@ -11,6 +11,7 @@ import {
   UtensilsCrossed,
   Users,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const navigation = [
   { label: 'Dashboard', to: '/admin', icon: LayoutDashboard, exact: true },
@@ -23,6 +24,14 @@ const navigation = [
 ];
 
 function AdminSidebar({ collapsed, mobileOpen, onCollapse, onMobileClose }) {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/admin/login', { replace: true });
+  };
+
   return (
     <aside className={`admin-sidebar${mobileOpen ? ' mobile-open' : ''}`}>
       <div className="admin-sidebar-brand">
@@ -64,7 +73,7 @@ function AdminSidebar({ collapsed, mobileOpen, onCollapse, onMobileClose }) {
         })}
       </nav>
 
-      <button type="button" className="admin-logout" aria-label="Logout UI only">
+      <button type="button" className="admin-logout" onClick={handleLogout} aria-label="Logout">
         <LogOut size={18} />
         <span>Logout</span>
       </button>

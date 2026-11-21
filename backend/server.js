@@ -9,6 +9,8 @@ const healthRoutes = require('./routes/healthRoutes');
 const foodRoutes = require('./routes/foodRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const errorMiddleware = require('./middleware/errorMiddleware');
+const cookieParser = require('cookie-parser');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -16,15 +18,18 @@ const port = Number(process.env.PORT) || 5000;
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL || process.env.CORS_ORIGIN || 'http://localhost:5173',
+    credentials: true,
   }),
 );
+app.use(cookieParser());
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', healthRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/auth', authRoutes);
 
 app.use(errorMiddleware);
 

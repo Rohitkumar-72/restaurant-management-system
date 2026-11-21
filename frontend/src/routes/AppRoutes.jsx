@@ -13,6 +13,8 @@ import AdminCategories from '../pages/admin/Categories.jsx';
 import AdminCustomers from '../pages/admin/Customers.jsx';
 import AdminAnalytics from '../pages/admin/AdminAnalytics.jsx';
 import AdminSettings from '../pages/admin/Settings.jsx';
+import AdminLogin from '../pages/admin/AdminLogin.jsx';
+import ProtectedRoute from '../components/common/ProtectedRoute.jsx';
 
 function AppRoutes() {
   return (
@@ -25,14 +27,17 @@ function AppRoutes() {
         <Route path="/order-confirmation" element={<OrderSuccess />} />
         <Route path="*" element={<Home />} />
       </Route>
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<Dashboard />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="menu-management" element={<AdminMenuManagement />} />
-        <Route path="categories" element={<AdminCategories />} />
-        <Route path="customers" element={<AdminCustomers />} />
-        <Route path="analytics" element={<AdminAnalytics />} />
-        <Route path="settings" element={<AdminSettings />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<ProtectedRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="menu-management" element={<AdminMenuManagement />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
       </Route>
     </Routes>
   );
