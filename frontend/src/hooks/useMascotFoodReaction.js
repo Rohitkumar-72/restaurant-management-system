@@ -1,12 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getFoodMascotReaction } from '../utils/mascotReactions.js';
+import { useMascotReaction } from '../context/MascotReactionContext.jsx';
 
 export function useMascotFoodReaction(mascotRef) {
+  const localTargetRef = useRef({ x: 0, y: 0, active: false, lean: 0 });
+  let shared = null;
+  try {
+    shared = useMascotReaction();
+  } catch {
+    shared = null;
+  }
+  const resolvedMascotRef = mascotRef?.current ? mascotRef : shared?.mascotRef;
+  const targetRef = shared?.targetRef || localTargetRef;
   const [activeFood, setActiveFood] = useState(null);
   const activeFoodRef = useRef(null);
   const visitedIdsRef = useRef(new Set());
   const leaveTimerRef = useRef(null);
-  const targetRef = useRef({ x: 0, y: 0, active: false, lean: 0 });
 
   const clearLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current) {
@@ -26,15 +35,15 @@ export function useMascotFoodReaction(mascotRef) {
     visitedIdsRef.current.add(foodId);
     const reaction = getFoodMascotReaction(food, { firstInteraction });
 
-    if (mascotRef.current?.setEmotion) {
-      mascotRef.current.setEmotion(reaction.emotion, reaction.duration);
+    if (resolvedMascotRef?.current?.setEmotion) {
+      resolvedMascotRef.current.setEmotion(reaction.emotion, reaction.duration);
     }
 
     let targetX = 0;
     let targetY = 0;
     if (cardElement) {
       const cardRect = cardElement.getBoundingClientRect();
-      const mascotElement = document.querySelector('.menu-mascot canvas');
+      const mascotElement = document.querySelector('.site-mascot canvas');
       if (mascotElement) {
         const mascotRect = mascotElement.getBoundingClientRect();
         targetX = ((cardRect.left + cardRect.width / 2) - (mascotRect.left + mascotRect.width / 2))
@@ -53,7 +62,7 @@ export function useMascotFoodReaction(mascotRef) {
     const active = { id: foodId, name: food.name, reaction: reaction.emotion };
     activeFoodRef.current = active;
     setActiveFood(active);
-  }, [clearLeaveTimer, mascotRef]);
+  }, [clearLeaveTimer, resolvedMascotRef]);
 
   const leaveFood = useCallback((food) => {
     clearLeaveTimer();
@@ -63,10 +72,10 @@ export function useMascotFoodReaction(mascotRef) {
       targetRef.current = { x: 0, y: 0, active: false, lean: 0 };
       activeFoodRef.current = null;
       setActiveFood(null);
-      mascotRef.current?.setEmotion?.('IDLE');
+      resolvedMascotRef?.current?.setEmotion?.('IDLE');
       leaveTimerRef.current = null;
     }, 260);
-  }, [clearLeaveTimer, mascotRef]);
+  }, [clearLeaveTimer, resolvedMascotRef]);
 
   useEffect(() => () => clearLeaveTimer(), [clearLeaveTimer]);
 

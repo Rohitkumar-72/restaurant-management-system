@@ -40,6 +40,13 @@ const loadCart = () => {
   }
 };
 
+const emitMascotReaction = (type, detail = {}) => {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('sapphire-mascot-reaction', {
+    detail: { type, ...detail },
+  }));
+};
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState(loadCart);
 
@@ -49,9 +56,19 @@ export function CartProvider({ children }) {
 
   const addItem = (dish) => {
     if (!dish?.id) return;
+    const existing = items.find((item) => item.foodId === dish.id);
+    const wasEmpty = items.length === 0;
+    const nextCount = existing ? items.reduce((count, item) => count + item.quantity, 0) + 1 : items.reduce((count, item) => count + item.quantity, 0) + 1;
+    if (wasEmpty) {
+      emitMascotReaction('CART_FIRST_ITEM_ADDED', { foodId: dish.id });
+    } else if (nextCount >= 5) {
+      emitMascotReaction('CART_VALUE_REACTION', { itemCount: nextCount });
+    } else {
+      emitMascotReaction('CART_ITEM_ADDED', { foodId: dish.id });
+    }
     setItems((current) => {
-      const existing = current.find((item) => item.foodId === dish.id);
-      if (existing) {
+      const currentExisting = current.find((item) => item.foodId === dish.id);
+      if (currentExisting) {
         return current.map((item) => item.foodId === dish.id
           ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY) }
           : item);
@@ -75,6 +92,15 @@ export function CartProvider({ children }) {
   };
 
   const removeItem = (foodId) => {
+    const removing = items.find((item) => item.foodId === foodId);
+    if (removing) {
+      const remainingCount = items.reduce((count, item) =>
+        count + (item.foodId === foodId ? 0 : item.quantity), 0);
+      emitMascotReaction(
+        remainingCount === 0 ? 'CART_EMPTY' : 'CART_ITEM_REMOVED',
+        { foodId },
+      );
+    }
     setItems((current) => current.filter((item) => item.foodId !== foodId));
   };
 
@@ -85,6 +111,14 @@ export function CartProvider({ children }) {
       removeItem(foodId);
       return;
     }
+    const current = items.find((item) => item.foodId === foodId);
+    if (current) {
+      if (nextQuantity > current.quantity) {
+        emitMascotReaction('CART_QUANTITY_INCREASED', { foodId });
+      } else if (nextQuantity < current.quantity) {
+        emitMascotReaction('CART_QUANTITY_DECREASED', { foodId });
+      }
+    }
     setItems((current) => current.map((item) =>
       item.foodId === foodId
         ? { ...item, quantity: Math.min(nextQuantity, MAX_QUANTITY) }
@@ -93,6 +127,9 @@ export function CartProvider({ children }) {
   };
 
   const increaseQuantity = (foodId) => {
+    if (items.some((item) => item.foodId === foodId && item.quantity < MAX_QUANTITY)) {
+      emitMascotReaction('CART_QUANTITY_INCREASED', { foodId });
+    }
     setItems((current) => current.map((item) =>
       item.foodId === foodId
         ? { ...item, quantity: Math.min(item.quantity + 1, MAX_QUANTITY) }
@@ -101,6 +138,17 @@ export function CartProvider({ children }) {
   };
 
   const decreaseQuantity = (foodId) => {
+    const decreasing = items.find((item) => item.foodId === foodId);
+    if (decreasing) {
+      const remainingCount = items.reduce((count, item) =>
+        count + (item.foodId === foodId ? 0 : item.quantity), 0);
+      emitMascotReaction(
+        decreasing.quantity <= 1
+          ? (remainingCount === 0 ? 'CART_EMPTY' : 'CART_ITEM_REMOVED')
+          : 'CART_QUANTITY_DECREASED',
+        { foodId },
+      );
+    }
     setItems((current) => current.flatMap((item) => {
       if (item.foodId !== foodId) return [item];
       if (item.quantity <= 1) return [];
@@ -108,7 +156,10 @@ export function CartProvider({ children }) {
     }));
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    if (items.length > 0) emitMascotReaction('CART_EMPTY');
+    setItems([]);
+  };
 
   const totals = useMemo(() => {
     const currentSubtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);

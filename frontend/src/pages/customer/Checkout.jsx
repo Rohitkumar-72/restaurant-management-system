@@ -23,7 +23,7 @@ function Checkout() {
     orderType: 'dine-in',
     tableNumber: '',
     instructions: '',
-    paymentMethod: form.paymentMethod === 'online' ? 'razorpay' : 'pay_at_counter',
+    paymentMethod: 'pay_at_counter',
   });
 
   useEffect(() => {

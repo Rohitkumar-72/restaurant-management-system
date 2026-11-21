@@ -1,10 +1,21 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Check } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 
 function OrderSuccess() {
   const location = useLocation();
   const order = location.state?.order;
+  const successEmittedRef = useRef(false);
+
+  useEffect(() => {
+    if (order?.orderNumber && !successEmittedRef.current) {
+      successEmittedRef.current = true;
+      window.dispatchEvent(new CustomEvent('sapphire-mascot-reaction', {
+        detail: { type: 'ORDER_SUCCESS' },
+      }));
+    }
+  }, [order]);
 
   if (!order) {
     return (

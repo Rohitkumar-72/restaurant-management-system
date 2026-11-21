@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -7,6 +8,14 @@ import { useCart } from '../../context/CartContext.jsx';
 import { useTable } from '../../context/TableContext.jsx';
 
 function Cart() {
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('sapphire-mascot-reaction', {
+      detail: { type: 'CART_OPENED' },
+    }));
+    return () => window.dispatchEvent(new CustomEvent('sapphire-mascot-reaction', {
+      detail: { type: 'CART_CLOSED' },
+    }));
+  }, []);
   const { table: assignedTable } = useTable();
   const {
     items,

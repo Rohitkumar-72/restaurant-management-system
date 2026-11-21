@@ -3,6 +3,7 @@ import AppRoutes from './routes/AppRoutes.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { TableProvider } from './context/TableContext.jsx';
+import { MascotReactionProvider } from './context/MascotReactionContext.jsx';
 
 function App() {
   return (
@@ -10,7 +11,9 @@ function App() {
       <AuthProvider>
         <CartProvider>
           <TableProvider>
-            <AppRoutes />
+            <MascotReactionProvider>
+              <AppRoutes />
+            </MascotReactionProvider>
           </TableProvider>
         </CartProvider>
       </AuthProvider>
