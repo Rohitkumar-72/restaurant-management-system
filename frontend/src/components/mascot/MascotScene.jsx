@@ -26,6 +26,7 @@ function MascotScene({
   className = '',
   ariaLabel = 'Sapphire Vista 3D restaurant mascot',
   emotionRef,
+  targetRef,
 }) {
   const canvasRef = useRef(null);
   const [fallback, setFallback] = useState(false);
@@ -265,6 +266,9 @@ function MascotScene({
       let pointerY = 0;
       let blinkUntil = 0;
       let nextBlink = performance.now() + 2200;
+      let visitX = 0;
+      let visitY = 0;
+      let visitLean = 0;
 
       const startTime = performance.now();
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -324,20 +328,32 @@ function MascotScene({
           : 0;
         const float = Math.sin(elapsed * profile.speed) * profile.float
           + profile.bounce * 0.45 + celebrationPulse + surprisedPulse;
+        const target = targetRef?.current || { x: 0, y: 0, active: false, lean: 0 };
+        visitX += ((target.active ? target.x : 0) - visitX) * 0.055;
+        visitY += ((target.active ? target.y : 0) - visitY) * 0.055;
+        visitLean += ((target.active ? target.lean : 0) - visitLean) * 0.055;
         character.position.y = float;
-        character.rotation.z = Math.sin(elapsed * profile.speed * 0.55) * profile.sway;
-        character.rotation.y = hover
-          ? Math.max(-0.24, Math.min(0.24, pointerX * 0.24))
-          : Math.sin(elapsed * 0.55) * profile.sway;
+        character.rotation.z = (Math.sin(elapsed * profile.speed * 0.55) * profile.sway) - visitLean * 0.09;
+        character.rotation.y = target.active
+          ? Math.max(-0.24, Math.min(0.24, visitX * 0.24))
+          : hover
+            ? Math.max(-0.24, Math.min(0.24, pointerX * 0.24))
+            : Math.sin(elapsed * 0.55) * profile.sway;
 
-        head.rotation.y = Math.max(-0.22, Math.min(0.22, pointerX * 0.22));
-        head.rotation.x = profile.tilt * entrance + Math.max(-0.12, Math.min(0.12, pointerY * -0.1));
+        head.rotation.y = target.active
+          ? Math.max(-0.24, Math.min(0.24, visitX * 0.24))
+          : Math.max(-0.22, Math.min(0.22, pointerX * 0.22));
+        head.rotation.x = profile.tilt * entrance
+          + (target.active
+            ? Math.max(-0.12, Math.min(0.12, visitY * -0.1))
+            : Math.max(-0.12, Math.min(0.12, pointerY * -0.1)));
         head.rotation.z = profile.tilt * 0.12 * entrance;
 
-        pupilLeft.position.x = -0.34 + pointerX * 0.035;
-        pupilRight.position.x = 0.34 + pointerX * 0.035;
-        irisLeft.position.x = -0.34 + pointerX * 0.035;
-        irisRight.position.x = 0.34 + pointerX * 0.035;
+        const gazeX = target.active ? visitX : pointerX;
+        pupilLeft.position.x = -0.34 + gazeX * 0.035;
+        pupilRight.position.x = 0.34 + gazeX * 0.035;
+        irisLeft.position.x = -0.34 + gazeX * 0.035;
+        irisRight.position.x = 0.34 + gazeX * 0.035;
 
         if (emotionName === 'EXCITED' || emotionName === 'SURPRISED') {
           blinkUntil = 0;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Check, Plus, SearchX, X } from 'lucide-react';
 import SearchBar from '../../components/customer/SearchBar.jsx';
@@ -9,6 +9,9 @@ import { menuCategories, menuItems } from '../../data/menuData.js';
 import { useCart } from '../../context/CartContext.jsx';
 import { foodService } from '../../services/foodService.js';
 import { useTable } from '../../context/TableContext.jsx';
+import { useMascotFoodReaction } from '../../hooks/useMascotFoodReaction.js';
+
+const Mascot = lazy(() => import('../../components/mascot/Mascot.jsx'));
 
 const fallbackImage = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85';
 
@@ -26,6 +29,12 @@ function Menu() {
   const reduceMotion = useReducedMotion();
   const { addItem } = useCart();
   const { table: assignedTable, loading: tableLoading, error: tableError, clearTable } = useTable();
+  const menuMascotRef = useRef(null);
+  const {
+    targetRef,
+    reactToFood,
+    leaveFood,
+  } = useMascotFoodReaction(menuMascotRef);
 
   useEffect(() => {
     let active = true;
@@ -107,6 +116,11 @@ function Menu() {
 
   const handleModalImageError = (event) => {
     if (event.currentTarget.src !== fallbackImage) event.currentTarget.src = fallbackImage;
+  };
+
+  const handleFoodSelect = (food) => {
+    reactToFood(food, null, 'focus');
+    setSelectedItem(food);
   };
 
   return (
@@ -196,7 +210,14 @@ function Menu() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              <FoodGrid items={filteredItems} onSelect={setSelectedItem} onAdd={handleAdd} />
+              <FoodGrid
+                items={filteredItems}
+                onSelect={handleFoodSelect}
+                onAdd={handleAdd}
+                onFoodHover={(food, element) => reactToFood(food, element, 'hover')}
+                onFoodLeave={(food) => leaveFood(food)}
+                onFoodTap={(food, element) => reactToFood(food, element, 'touch')}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -222,6 +243,18 @@ function Menu() {
           )}
         </AnimatePresence>
       </section>
+
+      <div className="menu-mascot" aria-hidden="true">
+        <Suspense fallback={<div className="mascot-canvas mascot-fallback"><span>SV</span></div>}>
+          <Mascot
+            ref={menuMascotRef}
+            size="small"
+            interactive
+            animated
+            targetRef={targetRef}
+          />
+        </Suspense>
+      </div>
 
       <Modal open={Boolean(selectedItem)} onClose={() => setSelectedItem(null)} labelledBy="food-details-title">
         {selectedItem && (

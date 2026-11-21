@@ -5,7 +5,7 @@ import { useCart } from '../../context/CartContext.jsx';
 
 const fallbackImage = 'https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=85';
 
-function FoodCard({ dish, index, onSelect, onAdd }) {
+function FoodCard({ dish, index, onSelect, onAdd, onFoodHover, onFoodLeave, onFoodTap }) {
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
 
@@ -30,9 +30,25 @@ function FoodCard({ dish, index, onSelect, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.55, delay: index * 0.08 }}
-      onClick={() => onSelect?.(dish)}
+      onClick={(event) => {
+        onFoodTap?.(dish, event.currentTarget);
+        onSelect?.(dish);
+      }}
+      onMouseEnter={(event) => onFoodHover?.(dish, event.currentTarget)}
+      onMouseLeave={() => onFoodLeave?.(dish)}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'touch') onFoodTap?.(dish, event.currentTarget);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') onFoodLeave?.(dish);
+      }}
+      onFocus={(event) => onFoodHover?.(dish, event.currentTarget)}
+      onBlur={() => onFoodLeave?.(dish)}
       onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') onSelect?.(dish);
+        if (event.key === 'Enter' || event.key === ' ') {
+          onFoodTap?.(dish, event.currentTarget);
+          onSelect?.(dish);
+        }
       }}
       tabIndex={0}
       role="button"

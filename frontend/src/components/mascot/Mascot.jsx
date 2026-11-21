@@ -8,6 +8,7 @@ const Mascot = forwardRef(function Mascot({
   animated = true,
   className = '',
   emotion: initialEmotion = 'IDLE',
+  targetRef,
 }, ref) {
   const { emotion, emotionRef, setEmotion } = useMascotEmotion(initialEmotion);
 
@@ -23,6 +24,7 @@ const Mascot = forwardRef(function Mascot({
       animated={animated}
       className={className}
       emotionRef={emotionRef}
+      targetRef={targetRef}
     />
   );
 });

@@ -1,6 +1,6 @@
 import FoodCard from './FoodCard.jsx';
 
-function FoodGrid({ items, onSelect, onAdd }) {
+function FoodGrid({ items, onSelect, onAdd, onFoodHover, onFoodLeave, onFoodTap }) {
   return (
     <div className="menu-grid">
       {items.map((dish, index) => (
@@ -10,6 +10,9 @@ function FoodGrid({ items, onSelect, onAdd }) {
           index={index}
           onSelect={onSelect}
           onAdd={onAdd}
+          onFoodHover={onFoodHover}
+          onFoodLeave={onFoodLeave}
+          onFoodTap={onFoodTap}
         />
       ))}
     </div>
