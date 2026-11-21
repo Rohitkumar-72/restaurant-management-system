@@ -33,3 +33,23 @@ export const getFoodMascotReaction = (food, context = {}) => {
   if (category === 'beverages') return { emotion: 'HAPPY', duration: 1100 };
   return { emotion: 'HAPPY', duration: 1100 };
 };
+
+export const getOrderStatusReaction = (status) => {
+  const normalized = typeof status === 'string' ? status.trim().toUpperCase() : '';
+  const mapping = {
+    PLACED: ['EXCITED', 1400],
+    PENDING: ['EXCITED', 1400],
+    CONFIRMED: ['HAPPY', 1300],
+    ACCEPTED: ['HAPPY', 1300],
+    PREPARING: ['THINKING', 1600],
+    PROCESSING: ['THINKING', 1600],
+    READY: ['CELEBRATING', 2200],
+    SERVED: ['LOVE', 1800],
+    COMPLETED: ['LOVE', 1800],
+    SUCCESS: ['LOVE', 1800],
+    CANCELLED: ['SAD', 1200],
+    REJECTED: ['SAD', 1200],
+    DELAYED: ['THINKING', 1400],
+  };
+  return mapping[normalized] || null;
+};

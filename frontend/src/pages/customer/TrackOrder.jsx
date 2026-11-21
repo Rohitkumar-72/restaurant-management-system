@@ -4,6 +4,7 @@ import { Check, PackageCheck, UtensilsCrossed } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { orderService } from '../../services/orderService.js';
 import { useSocket } from '../../hooks/useSocket.js';
+import { useMascotReaction } from '../../context/MascotReactionContext.jsx';
 
 const stages = ['PLACED', 'CONFIRMED', 'PREPARING', 'READY', 'SERVED', 'COMPLETED'];
 
@@ -16,6 +17,7 @@ function TrackOrder() {
   const { socket, connected } = useSocket();
   const mobile = searchParams.get('mobile') || '';
   const token = searchParams.get('token') || '';
+  const { reactToOrderStatus, clearOrderReactionHistory } = useMascotReaction();
 
   useEffect(() => {
     let active = true;
@@ -23,7 +25,10 @@ function TrackOrder() {
       setLoading(true);
       try {
         const data = await orderService.trackOrder(orderNumber, mobile, token);
-        if (active) setOrder(data);
+        if (active) {
+          setOrder(data);
+          reactToOrderStatus(data._id || data.orderNumber, data.orderStatus);
+        }
       } catch (requestError) {
         if (active) setError(requestError.message || 'Unable to load order');
       } finally {
@@ -36,11 +41,15 @@ function TrackOrder() {
       setLoading(false);
     }
     return () => { active = false; };
-  }, [orderNumber, mobile, token]);
+  }, [orderNumber, mobile, token, reactToOrderStatus]);
 
   useEffect(() => {
     if (!socket || !order) return undefined;
-    const handleStatus = (updated) => setOrder(updated);
+    const handleStatus = (updated) => {
+      if (String(updated._id || updated.orderNumber) !== String(order._id || order.orderNumber)) return;
+      setOrder(updated);
+      reactToOrderStatus(updated._id || updated.orderNumber, updated.orderStatus);
+    };
     socket.emit('order:track', { orderId: order._id, trackingToken: token, mobile });
     socket.on('order:status-changed', handleStatus);
     socket.on('order:tracking-error', (details) => setError(details.message));
@@ -48,7 +57,13 @@ function TrackOrder() {
       socket.off('order:status-changed', handleStatus);
       socket.off('order:tracking-error');
     };
-  }, [socket, order, token, mobile]);
+  }, [socket, order, token, mobile, reactToOrderStatus]);
+
+  useEffect(() => () => {
+    if (order?._id || orderNumber) {
+      clearOrderReactionHistory(order?._id || orderNumber);
+    }
+  }, [order, orderNumber, clearOrderReactionHistory]);
 
   if (loading) {
     return <main className="tracking-page"><section className="tracking-shell"><p>Loading order status...</p></section></main>;

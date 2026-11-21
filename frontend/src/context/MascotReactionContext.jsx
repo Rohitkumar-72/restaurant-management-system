@@ -1,5 +1,6 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { getOrderStatusReaction } from '../utils/mascotReactions.js';
 
 const Mascot = lazy(() => import('../components/mascot/Mascot.jsx'));
 
@@ -26,6 +27,7 @@ export function MascotReactionProvider({ children }) {
   const targetRef = useRef({ x: 0, y: 0, active: false, lean: 0 });
   const previousPathRef = useRef(location.pathname);
   const [activeReaction, setActiveReaction] = useState('IDLE');
+  const orderReactionHistoryRef = useRef(new Map());
 
   const react = useCallback((type) => {
     const reaction = reactionMap[type];
@@ -33,6 +35,23 @@ export function MascotReactionProvider({ children }) {
     const [emotion, duration] = reaction;
     mascotRef.current?.setEmotion?.(emotion, duration);
     setActiveReaction(emotion);
+  }, []);
+
+  const reactToOrderStatus = useCallback((orderId, status) => {
+    if (!orderId || !status) return;
+    const normalizedStatus = String(status).trim().toUpperCase();
+    const previousStatus = orderReactionHistoryRef.current.get(String(orderId));
+    if (previousStatus === normalizedStatus) return;
+    orderReactionHistoryRef.current.set(String(orderId), normalizedStatus);
+    const mapping = getOrderStatusReaction(normalizedStatus);
+    if (!mapping) return;
+    const [emotion, duration] = mapping;
+    mascotRef.current?.setEmotion?.(emotion, duration);
+    setActiveReaction(emotion);
+  }, []);
+
+  const clearOrderReactionHistory = useCallback((orderId) => {
+    if (orderId) orderReactionHistoryRef.current.delete(String(orderId));
   }, []);
 
   useEffect(() => {
@@ -58,7 +77,9 @@ export function MascotReactionProvider({ children }) {
     mascotRef,
     targetRef,
     activeReaction,
-  }), [activeReaction]);
+    reactToOrderStatus,
+    clearOrderReactionHistory,
+  }), [activeReaction, reactToOrderStatus, clearOrderReactionHistory]);
 
   const customerRoute = !location.pathname.startsWith('/admin');
 
