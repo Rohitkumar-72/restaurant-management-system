@@ -6,17 +6,17 @@ function CartSummary({ subtotal, discount, total, itemCount, checkout = true, on
       <h2>Order summary</h2>
       <div className="summary-line">
         <span>Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-        <strong>${subtotal.toFixed(2)}</strong>
+        <strong>₹{subtotal.toFixed(2)}</strong>
       </div>
       {discount > 0 && (
         <div className="summary-line discount-line">
           <span>Discount</span>
-          <strong>-${discount.toFixed(2)}</strong>
+          <strong>-₹{discount.toFixed(2)}</strong>
         </div>
       )}
       <div className="summary-total">
         <span>Final total</span>
-        <strong>${total.toFixed(2)}</strong>
+        <strong>₹{total.toFixed(2)}</strong>
       </div>
       {checkout && (
         <Link className="primary-button summary-checkout" to="/checkout">

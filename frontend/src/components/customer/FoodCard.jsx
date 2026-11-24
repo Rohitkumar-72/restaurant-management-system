@@ -67,7 +67,7 @@ function FoodCard({ dish, index, onSelect, onAdd, onFoodHover, onFoodLeave, onFo
         <span className="dish-category">{dish.category}</span>
         {dish.originalPrice && (
           <span className="discount-badge">
-            Save ${dish.originalPrice - dish.price}
+            Save ₹{dish.originalPrice - dish.price}
           </span>
         )}
         <span className={`food-type ${dish.foodType}`} title={dish.foodType === 'veg' ? 'Vegetarian' : 'Non-vegetarian'}>
@@ -78,8 +78,8 @@ function FoodCard({ dish, index, onSelect, onAdd, onFoodHover, onFoodLeave, onFo
         <div className="dish-heading">
           <h3>{dish.name}</h3>
           <div className="dish-price-wrap">
-            {dish.originalPrice && <span className="dish-original-price">${dish.originalPrice}</span>}
-            <span className="dish-price">${dish.price}</span>
+            {dish.originalPrice && <span className="dish-original-price">₹{dish.originalPrice}</span>}
+            <span className="dish-price">₹{dish.price}</span>
           </div>
         </div>
         <p>{dish.description}</p>

@@ -21,8 +21,8 @@ function CartItem({ item, onIncrease, onDecrease, onUpdate, onRemove }) {
         <p className="eyebrow">{item.category}</p>
         <h3>{item.name}</h3>
         <div className="cart-unit-price">
-          {item.originalPrice && <span>${item.originalPrice}</span>}
-          <strong>${item.unitPrice}</strong>
+          {item.originalPrice && <span>₹{item.originalPrice}</span>}
+          <strong>₹{item.unitPrice}</strong>
         </div>
       </div>
       <div className="cart-item-actions">
@@ -42,7 +42,7 @@ function CartItem({ item, onIncrease, onDecrease, onUpdate, onRemove }) {
             <Plus size={15} />
           </button>
         </div>
-        <strong className="cart-item-total">${(item.unitPrice * item.quantity).toFixed(2)}</strong>
+        <strong className="cart-item-total">₹{(item.unitPrice * item.quantity).toFixed(2)}</strong>
         <button className="cart-remove" type="button" onClick={() => onRemove(item.foodId)} aria-label={`Remove ${item.name}`}>
           <Trash2 size={16} />
         </button>
