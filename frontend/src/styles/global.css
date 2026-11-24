@@ -448,7 +448,7 @@ img {
 .dish-price {
   color: var(--color-sapphire);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 18px;
+  font-size: 27px;
 }
 
 .dish-content p {
@@ -956,7 +956,7 @@ img {
 .cart-item-total {
   color: var(--color-sapphire);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 17px;
+  font-size: 27px;
   font-weight: 400;
 }
 
@@ -1757,32 +1757,34 @@ img {
   height: 18px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--color-gold);
+
   background: rgb(11 11 12 / 82%);
 }
 
 .food-type i,
 .detail-food-type i {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   display: block;
   border-radius: 50%;
-  background: var(--color-gold);
+  background: #22c55e;
 }
 
 .food-type.veg,
 .detail-food-type.veg {
-  border-color: var(--color-gold);
+  border-color: #22c55e;
 }
+
+
 
 .food-type.non-veg i,
 .detail-food-type.non-veg i {
-  background: var(--color-sapphire);
+  background: #8b4513;
 }
 
 .food-type.non-veg,
 .detail-food-type.non-veg {
-  border-color: var(--color-sapphire);
+  border-color: #8b4513;
 }
 
 .menu-empty {
